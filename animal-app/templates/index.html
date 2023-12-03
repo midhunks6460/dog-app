@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animals App</title>
+</head>
+<body>
+    <h1>Animals App</h1>
+
+    <ul id="animalList">
+        {% for animal in animals %}
+            <li>
+                {{ animal.name }}
+                <button onclick="deleteAnimal({{ animal.id }})">Delete</button>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <form id="addAnimalForm">
+        <label for="animalName">Animal Name:</label>
+        <input type="text" id="animalName" required>
+        <button type="button" onclick="addAnimal()">Add Animal</button>
+    </form>
+
+    <script>
+        function addAnimal() {
+            const animalName = document.getElementById('animalName').value;
+            fetch('/add_animal', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: animalName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const animalList = document.getElementById('animalList');
+                const listItem = document.createElement('li');
+                listItem.textContent = data.name;
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = () => deleteAnimal(data.id);
+                listItem.appendChild(deleteButton);
+                animalList.appendChild(listItem);
+            });
+        }
+
+        function deleteAnimal(id) {
+            fetch(`/delete_animal/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const listItem = document.querySelector(`#animalList li:contains('${data.name}')`);
+                listItem.remove();
+            });
+        }
+
+        // Helper function for jQuery-like :contains selector
+        function contains(selector, text) {
+            var elements = document.querySelectorAll(selector);
+            return Array.from(elements).find(el => el.textContent.includes(text));
+        }
+    </script>
+</body>
+</html>
